@@ -64,18 +64,20 @@ class IndexedList(BaseList):
         # update index
         if len(self.values) == 0:
             self.index = [[value, 0]]
-            super().add(value)
-            return
         
-        sorted_values = [x[0] for x in self.index]
-        index_idx = bisect.bisect_left(sorted_values, value)
+        # special case - new max. Don't insert, just append
+        elif value >= self.index[-1][0]:
+            self.index.append([value, len(self.index)])
+        else:
+            sorted_values = [x[0] for x in self.index]
+            index_idx = bisect.bisect_left(sorted_values, value)
 
-        temp_index = self.index[:index_idx]
-        temp_index.append([value, len(self.values)])
+            temp_index = self.index[:index_idx]
+            temp_index.append([value, len(self.values)])
 
-        if index_idx != len(self.values):
-            temp_index.extend(self.index[index_idx:])
-        self.index = temp_index
+            if index_idx != len(self.values):
+                temp_index.extend(self.index[index_idx:])
+            self.index = temp_index
 
         # add value
         super().add(value)

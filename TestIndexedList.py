@@ -5,16 +5,14 @@ from IndexedList import IndexedList
 
 class TestIndexedList(unittest.TestCase):
 
-    # def test_init(self):
-    #     v = IndexedList([2,3,1])
-
-    #     self.assertEqual(len(v.index), 3)
-
-    #     self.assertListEqual(v.index, [
-    #         [1, 2],
-    #         [2, 0],
-    #         [3, 1],
-    #     ])
+    def test_init(self):
+        v = IndexedList([2,3,1])
+        self.assertEqual(len(v.index), 3)
+        self.assertListEqual(v.index, [
+            [1, 2],
+            [2, 0],
+            [3, 1],
+        ])
         
 
     def test_add(self):

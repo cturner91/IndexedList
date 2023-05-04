@@ -81,8 +81,50 @@ class IndexedList(BaseList):
         super().add(value)
 
     def delete(self, value=None, index=None):
-        pass
+        
+        if value is None and index is None:
+            raise KeyError('Must specify value or index')
+
+        if value is not None:
+            sorted_values = [x[0] for x in self.index]
+            index_idx = bisect.bisect_left(sorted_values, value)
+            if self.index[index_idx][0] != value:
+                raise ValueError(f'Value {value} not in index')
+        else:
+            index_idx = index
+        
+        temp_index = self.index[:index_idx]
+
+        later_index = [[x[0], x[1]-1] for x in self.index[index_idx+1:]]
+        temp_index.extend(later_index)
+        self.index = temp_index
+        
+        super().delete(index=index_idx)
+
 
     def query(self, eq=None, gt=None, gte=None, lt=None, lte=None):
-        pass
 
+        idx1, idx2 = 0, len(self.values)
+        sorted_values = [x[0] for x in self.index]
+
+        if eq is not None:
+            idx1 = max(idx1, bisect.bisect_left(sorted_values, eq))
+            idx2 = min(idx2, bisect.bisect_right(sorted_values, eq))
+        if gt is not None:
+            idx1 = max(idx1, bisect.bisect_right(sorted_values, gt))
+        if gte is not None:
+            idx1 = max(idx1, bisect.bisect_left(sorted_values, gte))
+        if lt is not None:
+            idx2 = min(idx2, bisect.bisect_left(sorted_values, lt))
+        if lte is not None:
+            idx2 = min(idx2, bisect.bisect_right(sorted_values, lte))
+        
+        # get indices of source list
+        # sorted() maintains order of original list - indices are originally extracted in order of value
+        indices = sorted([x[1] for x in self.index[idx1:idx2]])
+
+        result = []
+        for index in indices:
+            result.append(self.values[index])
+
+        return result

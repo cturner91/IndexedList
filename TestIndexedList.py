@@ -122,6 +122,31 @@ class TestIndexedList(unittest.TestCase):
         result = v.query(lte=3)
         self.assertListEqual(result, [0,1,3,2])
 
+        # compound filters
+        result = v.query(gt=5, lt=8)
+        self.assertListEqual(result, [6,7])
+
+        result = v.query(lt=8, eq=5)
+        self.assertListEqual(result, [5,5,5])
+
+        # non-integer queries
+        result = v.query(lte=2.9)
+        self.assertListEqual(result, [0,1,2])
+
+        result = v.query(lt=4.5)
+        self.assertListEqual(result, [0,1,3,2,4])
+
+        result = v.query(gte=5.9)
+        self.assertListEqual(result, [6,9,8,7])
+
+        # non-integer compound query
+        result = v.query(gt=4.9, lt=6.1)
+        self.assertListEqual(result, [5,5,6,5])
+
+        # bad input
+        result = v.query(gt=8, lt=7)
+        self.assertListEqual(result, [])
+
 
 if __name__ == '__main__':
     unittest.main()

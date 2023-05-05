@@ -66,7 +66,10 @@ class IndexedList(BaseList):
             self.index_values = [value]
             self.index_indices = [0]
         
-        # special case - new max. Don't insert, just append
+        # special case - new min/max. Don't insert, just append
+        elif value <= self.index_values[0]:
+            self.index_values.insert(0, value)
+            self.index_indices.insert(0, len(self.index_values)-1)
         elif value >= self.index_values[-1]:
             self.index_values.append(value)
             self.index_indices.append(len(self.index_values)-1)

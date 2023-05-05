@@ -1,4 +1,5 @@
 import json
+import random
 import timeit
 
 import matplotlib.pyplot as plt
@@ -22,25 +23,29 @@ from IndexedList import IndexedList, BaseList
 #%%
 
 results, repeats = {}, 100
-for p in [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]:
+for p in [1, 1.5, 2, 2.5, 3, 3.5, 4]:
     print(p)
     n = int(10 ** p)
 
+    # values = range(n)  # ascending
+    # values = range(n)[::-1]  # descending
+    values = sorted(range(n), key=lambda x: random.random())  # random
+
     print('creating baselist')
-    baselist = BaseList(range(n))
-    timing_baselist_write = timeit.timeit(f'BaseList(range(n))', globals=globals(), number=repeats)
+    baselist = BaseList(range(n)[::-1])
+    timing_baselist_write = timeit.timeit(f'BaseList(range(n)[::-1])', globals=globals(), number=repeats)
 
     print('creating indexlist')
-    indexlist = IndexedList(range(n))
-    timing_indexlist_write = timeit.timeit(f'IndexedList(range(n))', globals=globals(), number=repeats)
+    indexlist = IndexedList(range(n)[::-1])
+    timing_indexlist_write = timeit.timeit(f'IndexedList(range(n)[::-1])', globals=globals(), number=repeats)
 
     print('querying baselist')
-    result_baselist = baselist.query(eq=500, gt=100, lt=600)
-    timing_baselist_read = timeit.timeit('baselist.query(eq=500, gt=100, lt=600)', globals=globals(), number=repeats)
+    result_baselist = baselist.query(eq=500)
+    timing_baselist_read = timeit.timeit('baselist.query(eq=500)', globals=globals(), number=repeats)
 
     print('querying indexlist')
-    result_indexlist = indexlist.query(eq=500, gt=100, lt=600)
-    timing_indexlist_read = timeit.timeit('indexlist.query(eq=500, gt=100, lt=600)', globals=globals(), number=repeats)
+    result_indexlist = indexlist.query(eq=500)
+    timing_indexlist_read = timeit.timeit('indexlist.query(eq=500)', globals=globals(), number=repeats)
 
     results[p] = {
         'baselist': {'write': timing_baselist_write, 'read': timing_baselist_read},

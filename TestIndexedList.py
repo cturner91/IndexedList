@@ -63,7 +63,7 @@ class TestIndexedList(unittest.TestCase):
 
         v.delete(index=0)
         self.assertEqual(v.index_values, [12])
-        self.assertEqual(v.index_indices, [1])
+        self.assertEqual(v.index_indices, [0])
 
         v.delete(index=0)
         self.assertEqual(v.index_values, [])

@@ -21,16 +21,11 @@ class BaseList:
         if index is not None:
             if index < 0 or index >= len(self.values):
                 raise IndexError('0 < index < len()')
-            value = self.values[index]
-            self.values = self.values[:index] + self.values[index+1:]
-            return value
+            del self.values[index]
         
         if value is not None:
-            # loop through, find first element that matches and remove it
-            for i in range(len(self.values)):
-                if self.values[i] == value:
-                    return self.delete(index=i)
-            raise ValueError(f'Value {value} not found in values')
+            i = self.values.index(value)  # should raise error if value not in values
+            return self.delete(index=i)
         
     def query(self, eq=None, gt=None, gte=None, lt=None, lte=None):
         filtered_list = self.values[:]
@@ -75,20 +70,12 @@ class IndexedList(BaseList):
             self.index_indices.append(len(self.index_values)-1)
         else:
             index_idx = bisect.bisect_left(self.index_values, value)
-
-            temp_index_values = self.index_values[:index_idx]
-            temp_index_indices = self.index_indices[:index_idx]
-            temp_index_values.append(value)
-            temp_index_indices.append(len(self.values))
-
-            if index_idx != len(self.values):
-                temp_index_values.extend(self.index_values[index_idx:])
-                temp_index_indices.extend(self.index_indices[index_idx:])
-            self.index_values = temp_index_values
-            self.index_indices = temp_index_indices
+            self.index_values.insert(index_idx, value)
+            self.index_indices.insert(index_idx, len(self.values))
 
         # add value
         super().add(value)
+        
 
     def delete(self, value=None, index=None):
         
@@ -107,24 +94,13 @@ class IndexedList(BaseList):
             else:
                 index_idx = index
 
-            if index == 0:
-                self.index_values = self.index_values[1:]
-                self.index_indices = self.index_indices[1:]
-            elif index == len(self.values)-1:
-                self.index_values = self.index_values[:-1]
-                self.index_indices = self.index_indices[:-1]
-            else:
-                temp_index_values = self.index_values[:index_idx]
-                temp_index_indices = self.index_indices[:index_idx]
+            del self.index_values[index_idx]
+            del self.index_indices[index_idx]
 
-                later_index_values = [x for x in self.index_values[index_idx+1:]]
-                later_index_indices = [x-1 for x in self.index_indices[index_idx+1:]]
-                temp_index_values.extend(later_index_values)
-                temp_index_indices.extend(later_index_indices)
-                self.index_values = temp_index_values
-                self.index_indices = temp_index_indices
+            # need to decrement the indices after the index value
+            self.index_indices = [idx if idx < index_idx else idx-1 for idx in self.index_indices]
         
-                super().delete(index=index_idx)
+            super().delete(index=index_idx)
 
 
     def query(self, eq=None, gt=None, gte=None, lt=None, lte=None):
@@ -146,8 +122,4 @@ class IndexedList(BaseList):
         # sorted() maintains order of original list - indices are originally extracted in order of value
         indices = sorted(self.index_indices[idx1:idx2])
 
-        result = []
-        for index in indices:
-            result.append(self.values[index])
-
-        return result
+        return [self.values[i] for i in indices]

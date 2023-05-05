@@ -51,9 +51,9 @@ class IndexedList(BaseList):
     def __init__(self, values=None):
         self.values = []
 
-        # index is a list of pairs - (value, index) in the .values list
-        # value is ordered in the index
-        self.index = []
+        # cannot use a list for index - accessing it in a list comprehension corrodes performance
+        self.index_values = []
+        self.index_indices = []
 
         if values:
             for value in values:
@@ -63,21 +63,26 @@ class IndexedList(BaseList):
         
         # update index
         if len(self.values) == 0:
-            self.index = [[value, 0]]
+            self.index_values = [value]
+            self.index_indices = [0]
         
         # special case - new max. Don't insert, just append
-        elif value >= self.index[-1][0]:
-            self.index.append([value, len(self.index)])
+        elif value >= self.index_values[-1]:
+            self.index_values.append(value)
+            self.index_indices.append(len(self.index_values)-1)
         else:
-            sorted_values = [x[0] for x in self.index]
-            index_idx = bisect.bisect_left(sorted_values, value)
+            index_idx = bisect.bisect_left(self.index_values, value)
 
-            temp_index = self.index[:index_idx]
-            temp_index.append([value, len(self.values)])
+            temp_index_values = self.index_values[:index_idx]
+            temp_index_indices = self.index_indices[:index_idx]
+            temp_index_values.append(value)
+            temp_index_indices.append(len(self.values))
 
             if index_idx != len(self.values):
-                temp_index.extend(self.index[index_idx:])
-            self.index = temp_index
+                temp_index_values.extend(self.index_values[index_idx:])
+                temp_index_indices.extend(self.index_indices[index_idx:])
+            self.index_values = temp_index_values
+            self.index_indices = temp_index_indices
 
         # add value
         super().add(value)
@@ -86,44 +91,57 @@ class IndexedList(BaseList):
         
         if value is None and index is None:
             raise KeyError('Must specify value or index')
+        
+        if len(self.index_values) == 1:
+            self.index_values = []
+            self.index_indices = []
 
-        if value is not None:
-            sorted_values = [x[0] for x in self.index]
-            index_idx = bisect.bisect_left(sorted_values, value)
-            if self.index[index_idx][0] != value:
-                raise ValueError(f'Value {value} not in index')
         else:
-            index_idx = index
-        
-        temp_index = self.index[:index_idx]
+            if value is not None:
+                index_idx = bisect.bisect_left(self.index_values, value)
+                if self.index_values[index_idx] != value:
+                    raise ValueError(f'Value {value} not in index')
+            else:
+                index_idx = index
 
-        later_index = [[x[0], x[1]-1] for x in self.index[index_idx+1:]]
-        temp_index.extend(later_index)
-        self.index = temp_index
+            if index == 0:
+                self.index_values = self.index_values[1:]
+                self.index_indices = self.index_indices[1:]
+            elif index == len(self.values)-1:
+                self.index_values = self.index_values[:-1]
+                self.index_indices = self.index_indices[:-1]
+            else:
+                temp_index_values = self.index_values[:index_idx]
+                temp_index_indices = self.index_indices[:index_idx]
+
+                later_index_values = [x for x in self.index_values[index_idx+1:]]
+                later_index_indices = [x-1 for x in self.index_indices[index_idx+1:]]
+                temp_index_values.extend(later_index_values)
+                temp_index_indices.extend(later_index_indices)
+                self.index_values = temp_index_values
+                self.index_indices = temp_index_indices
         
-        super().delete(index=index_idx)
+                super().delete(index=index_idx)
 
 
     def query(self, eq=None, gt=None, gte=None, lt=None, lte=None):
 
         idx1, idx2 = 0, len(self.values)
-        sorted_values = [x[0] for x in self.index]
-
         if eq is not None:
-            idx1 = max(idx1, bisect.bisect_left(sorted_values, eq))
-            idx2 = min(idx2, bisect.bisect_right(sorted_values, eq))
+            idx1 = max(idx1, bisect.bisect_left(self.index_values, eq))
+            idx2 = min(idx2, bisect.bisect_right(self.index_values, eq))
         if gt is not None:
-            idx1 = max(idx1, bisect.bisect_right(sorted_values, gt))
+            idx1 = max(idx1, bisect.bisect_right(self.index_values, gt))
         if gte is not None:
-            idx1 = max(idx1, bisect.bisect_left(sorted_values, gte))
+            idx1 = max(idx1, bisect.bisect_left(self.index_values, gte))
         if lt is not None:
-            idx2 = min(idx2, bisect.bisect_left(sorted_values, lt))
+            idx2 = min(idx2, bisect.bisect_left(self.index_values, lt))
         if lte is not None:
-            idx2 = min(idx2, bisect.bisect_right(sorted_values, lte))
+            idx2 = min(idx2, bisect.bisect_right(self.index_values, lte))
         
         # get indices of source list
         # sorted() maintains order of original list - indices are originally extracted in order of value
-        indices = sorted([x[1] for x in self.index[idx1:idx2]])
+        indices = sorted(self.index_indices[idx1:idx2])
 
         result = []
         for index in indices:

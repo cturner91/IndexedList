@@ -1,6 +1,9 @@
+import sys
+sys.path.append('..')
+
 import unittest
 
-from IndexedList import IndexedList, BaseList
+from src.indexed_list import BaseList, IndexedList
 
 
 class TestIndexedList(unittest.TestCase):
@@ -19,6 +22,104 @@ class TestIndexedList(unittest.TestCase):
         self.assertListEqual(v._index_values, [1, 2, 3])
         self.assertListEqual(v._index_indices, [2, 0, 1])
 
+    def test_add_with_no_value(self):
+        with self.assertRaises(ValueError):
+            self.ilist.add()
+
+    def test_add_when_length_is_zero(self):
+        ilist = IndexedList()
+        ilist.add(5)
+        self.assertEqual(len(ilist), 1)
+        self.assertEqual(ilist._index_values[0], 5)
+        self.assertEqual(ilist._index_indices[0], 0)
+
+    def test_add_when_value_is_minimum(self):
+        self.ilist.add(-5)
+        self.assertEqual(self.ilist._index_values[0], -5)
+        self.assertEqual(self.ilist._index_indices[0], len(self.ilist.values)-1)
+
+    def test_add_when_value_is_maximum(self):
+        self.ilist.add(50)
+        self.assertEqual(self.ilist._index_values[-1], 50)
+        self.assertEqual(self.ilist._index_indices[-1], len(self.ilist.values)-1)
+
+    def test_add_when_value_is_in_middle(self):
+        self.ilist.add(13)  # .values is now [10, 20, 15, 12, 13]
+        self.assertEqual(self.ilist._index_values[2], 13)
+        self.assertEqual(self.ilist._index_indices[2], len(self.ilist.values)-1)
+
+    def test_delete_when_no_value_and_no_index(self):
+        with self.assertRaises(ValueError):
+            self.ilist.delete()
+
+    def test_delete_when_length_is_one(self):
+        ilist = IndexedList([5])
+        ilist.delete(index=0)
+        self.assertEqual(len(ilist.values), 0)
+        self.assertEqual(len(ilist._index_values), 0)
+        self.assertEqual(len(ilist._index_indices), 0)
+
+    def test_delete_with_index(self):
+        self.ilist.delete(index=1)  # .values is [10, 20, 15, 12]
+        self.assertListEqual(self.ilist.values, [10, 15, 12])
+        self.assertListEqual(self.ilist._index_values, [10, 12, 15])
+        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
+
+    def test_delete_with_value(self):
+        self.ilist.delete(value=15)  # .values is [10, 20, 15, 12]
+        self.assertListEqual(self.ilist.values, [10, 20, 12])
+        self.assertListEqual(self.ilist._index_values, [10, 12, 20])
+        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
+
+    def test_delete_with_value_not_present_in_list(self):
+        with self.assertRaises(ValueError):
+            self.ilist.delete(value=29)
+
+    def test_delete_first_entry_via_index(self):
+        self.ilist.delete(index=0)
+        self.assertListEqual(self.ilist.values, [20, 15, 12])
+        self.assertListEqual(self.ilist._index_values, [12, 15, 20])
+        self.assertListEqual(self.ilist._index_indices, [2, 1, 0])
+
+        # 10 is also the lowest value ie first in index_values - test again with non-min value
+        self.ilist.delete(index=0)
+        self.assertListEqual(self.ilist.values, [15, 12])
+        self.assertListEqual(self.ilist._index_values, [12, 15])
+        self.assertListEqual(self.ilist._index_indices, [1, 0])
+
+    def test_delete_first_entry_via_value(self):
+        self.ilist.delete(value=10)
+        self.assertListEqual(self.ilist.values, [20, 15, 12])
+        self.assertListEqual(self.ilist._index_values, [12, 15, 20])
+        self.assertListEqual(self.ilist._index_indices, [2, 1, 0])
+
+        # 10 is also the lowest value ie first in index_values - test again with non-min value
+        self.ilist.delete(value=20)
+        self.assertListEqual(self.ilist.values, [15, 12])
+        self.assertListEqual(self.ilist._index_values, [12, 15])
+        self.assertListEqual(self.ilist._index_indices, [1, 0])
+
+    def test_delete_last_entry_via_index(self):
+        self.ilist.delete(index=3)  # .values is [10, 20, 15, 12]
+        self.assertListEqual(self.ilist.values, [10, 20, 15])
+        self.assertListEqual(self.ilist._index_values, [10, 15, 20])
+        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
+
+    def test_delete_last_entry_via_negative_index(self):
+        self.ilist.delete(index=-1)
+        self.assertListEqual(self.ilist.values, [10, 20, 15])
+        self.assertListEqual(self.ilist._index_values, [10, 15, 20])
+        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
+
+    def test_delete_last_entry_via_value(self):
+        self.ilist.delete(value=12)
+        self.assertListEqual(self.ilist.values, [10, 20, 15])
+        self.assertListEqual(self.ilist._index_values, [10, 15, 20])
+        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
+
+
+    # add some 'generic' test cases - run a couple of scenarios for each method and ensure
+    # the output is generally as expected.
     def test_add_generic(self):
         v = IndexedList()
 
@@ -119,102 +220,6 @@ class TestIndexedList(unittest.TestCase):
         # bad input
         result = v.query(gt=8, lt=7)
         self.assertListEqual(result, [])
-
-    def test_add_with_no_value(self):
-        with self.assertRaises(ValueError):
-            self.ilist.add()
-
-    def test_add_when_length_is_zero(self):
-        ilist = IndexedList()
-        ilist.add(5)
-        self.assertEqual(len(ilist), 1)
-        self.assertEqual(ilist._index_values[0], 5)
-        self.assertEqual(ilist._index_indices[0], 0)
-
-    def test_add_when_value_is_minimum(self):
-        self.ilist.add(-5)
-        self.assertEqual(self.ilist._index_values[0], -5)
-        self.assertEqual(self.ilist._index_indices[0], len(self.ilist.values)-1)
-
-    def test_add_when_value_is_maximum(self):
-        self.ilist.add(50)
-        self.assertEqual(self.ilist._index_values[-1], 50)
-        self.assertEqual(self.ilist._index_indices[-1], len(self.ilist.values)-1)
-
-    def test_add_when_value_is_in_middle(self):
-        self.ilist.add(13)  # .values is now [10, 20, 15, 12, 13]
-        self.assertEqual(self.ilist._index_values[2], 13)
-        self.assertEqual(self.ilist._index_indices[2], len(self.ilist.values)-1)
-
-    def test_delete_when_no_value_and_no_index(self):
-        with self.assertRaises(ValueError):
-            self.ilist.delete()
-
-    def test_delete_when_length_is_one(self):
-        ilist = IndexedList([5])
-        ilist.delete(index=0)
-        self.assertEqual(len(ilist.values), 0)
-        self.assertEqual(len(ilist._index_values), 0)
-        self.assertEqual(len(ilist._index_indices), 0)
-
-    def test_delete_with_index(self):
-        self.ilist.delete(index=1)  # .values is [10, 20, 15, 12]
-        self.assertListEqual(self.ilist.values, [10, 15, 12])
-        self.assertListEqual(self.ilist._index_values, [10, 12, 15])
-        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
-
-    def test_delete_with_value(self):
-        self.ilist.delete(value=15)  # .values is [10, 20, 15, 12]
-        self.assertListEqual(self.ilist.values, [10, 20, 12])
-        self.assertListEqual(self.ilist._index_values, [10, 12, 20])
-        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
-
-    def test_delete_with_value_not_present_in_list(self):
-        with self.assertRaises(ValueError):
-            self.ilist.delete(value=29)
-
-    def test_delete_first_entry_via_index(self):
-        self.ilist.delete(index=0)
-        self.assertListEqual(self.ilist.values, [20, 15, 12])
-        self.assertListEqual(self.ilist._index_values, [12, 15, 20])
-        self.assertListEqual(self.ilist._index_indices, [2, 1, 0])
-
-        # 10 is also the lowest value ie first in index_values - test again with non-min value
-        self.ilist.delete(index=0)
-        self.assertListEqual(self.ilist.values, [15, 12])
-        self.assertListEqual(self.ilist._index_values, [12, 15])
-        self.assertListEqual(self.ilist._index_indices, [1, 0])
-
-    def test_delete_first_entry_via_value(self):
-        self.ilist.delete(value=10)
-        self.assertListEqual(self.ilist.values, [20, 15, 12])
-        self.assertListEqual(self.ilist._index_values, [12, 15, 20])
-        self.assertListEqual(self.ilist._index_indices, [2, 1, 0])
-
-        # 10 is also the lowest value ie first in index_values - test again with non-min value
-        self.ilist.delete(value=20)
-        self.assertListEqual(self.ilist.values, [15, 12])
-        self.assertListEqual(self.ilist._index_values, [12, 15])
-        self.assertListEqual(self.ilist._index_indices, [1, 0])
-
-    def test_delete_last_entry_via_index(self):
-        self.ilist.delete(index=3)  # .values is [10, 20, 15, 12]
-        self.assertListEqual(self.ilist.values, [10, 20, 15])
-        self.assertListEqual(self.ilist._index_values, [10, 15, 20])
-        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
-
-    def test_delete_last_entry_via_negative_index(self):
-        self.ilist.delete(index=-1)
-        self.assertListEqual(self.ilist.values, [10, 20, 15])
-        self.assertListEqual(self.ilist._index_values, [10, 15, 20])
-        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
-
-    def test_delete_last_entry_via_value(self):
-        self.ilist.delete(value=12)
-        self.assertListEqual(self.ilist.values, [10, 20, 15])
-        self.assertListEqual(self.ilist._index_values, [10, 15, 20])
-        self.assertListEqual(self.ilist._index_indices, [0, 2, 1])
-
 
     # Validate vs BaseList
     def test_vs_baselist(self):

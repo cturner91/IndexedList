@@ -1,6 +1,9 @@
+import sys
+sys.path.append('..')
+
 import unittest
 
-from IndexedList import BaseList
+from src.indexed_list import BaseList
 
 
 class TestBaseList(unittest.TestCase):
@@ -76,7 +79,6 @@ class TestBaseList(unittest.TestCase):
         self.assertIn(7, result)
         self.assertIn(8, result)
         self.assertIn(9, result)
-
 
 
 if __name__ == '__main__':

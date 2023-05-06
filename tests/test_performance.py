@@ -1,11 +1,13 @@
+import sys
+sys.path.append('..')
+
 import json
 import random
 import timeit
 
 import matplotlib.pyplot as plt
 
-from IndexedList import IndexedList, BaseList
-
+from src.indexed_list import IndexedList, BaseList
 
 # def test_timing_list_indexing():
 #     # test whether accessing via index is slower on bigger arrays
@@ -91,6 +93,7 @@ ax.set_ylabel('Time (s)', {'fontsize': 16})
 ax.legend()
 ax.grid(True, linestyle='--')
 
+plt.savefig('./performance.png')
 plt.show()
 
 

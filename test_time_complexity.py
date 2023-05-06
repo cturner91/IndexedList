@@ -22,30 +22,30 @@ from IndexedList import IndexedList, BaseList
 
 #%%
 
-results, repeats = {}, 200
-for p in [1, 1.5, 2, 2.5, 3, 3.5, 4]:
-    print(p)
+results, repeats = {}, 20
+for p in [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4]:
+    # print(p)
     n = int(10 ** p)
 
     # values = range(n)  # ascending
     # values = range(n)[::-1]  # descending
     values = sorted(range(n), key=lambda x: random.random())  # random
 
-    print('creating baselist')
+    # print('creating baselist')
     baselist = BaseList(range(n)[::-1])
-    timing_baselist_write = timeit.timeit(f'BaseList(range(n)[::-1])', globals=globals(), number=repeats)
+    timing_baselist_write = timeit.timeit(f'BaseList(range(n)[::-1])', globals=globals(), number=repeats) / repeats
 
-    print('creating indexlist')
+    # print('creating indexlist')
     indexlist = IndexedList(range(n)[::-1])
-    timing_indexlist_write = timeit.timeit(f'IndexedList(range(n)[::-1])', globals=globals(), number=repeats)
+    timing_indexlist_write = timeit.timeit(f'IndexedList(range(n)[::-1])', globals=globals(), number=repeats) / repeats
 
-    print('querying baselist')
+    # print('querying baselist')
     result_baselist = baselist.query(eq=500)
-    timing_baselist_read = timeit.timeit('baselist.query(eq=500)', globals=globals(), number=repeats)
+    timing_baselist_read = timeit.timeit('baselist.query(eq=500)', globals=globals(), number=repeats) / repeats
 
-    print('querying indexlist')
+    # print('querying indexlist')
     result_indexlist = indexlist.query(eq=500)
-    timing_indexlist_read = timeit.timeit('indexlist.query(eq=500)', globals=globals(), number=repeats)
+    timing_indexlist_read = timeit.timeit('indexlist.query(eq=500)', globals=globals(), number=repeats) / repeats
 
     results[p] = {
         'baselist': {'write': timing_baselist_write, 'read': timing_baselist_read},
@@ -66,15 +66,14 @@ x = list(results.keys())
 base = [results[p]['baselist']['write'] for p in x]
 index = [results[p]['indexlist']['write'] for p in x]
 
-f, axs = plt.subplots(2, 1)
-print(axs)
+f, axs = plt.subplots(2, 1, figsize=(10, 7))
 
 ax = axs[0]
-ax.plot(x, base, label='base')
-ax.plot(x, index, label='index')
+ax.plot(x, base, label='BaseList')
+ax.plot(x, index, label='IndexedList')
 ax.set_title('Write performance')
 # ax.set_xlabel('Power of 10')
-ax.set_ylabel('Relative time')
+ax.set_ylabel('Time (s)', {'fontsize': 16})
 ax.legend()
 ax.grid(True, linestyle='--')
 
@@ -84,11 +83,11 @@ base = [results[p]['baselist']['read'] for p in x]
 index = [results[p]['indexlist']['read'] for p in x]
 
 ax = axs[1]
-ax.plot(x, base, label='base')
-ax.plot(x, index, label='index')
+ax.plot(x, base, label='BaseList')
+ax.plot(x, index, label='IndexedList')
 ax.set_title('Read performance')
-ax.set_xlabel('Power of 10')
-ax.set_ylabel('Relative time')
+ax.set_xlabel('Number of elements ($10^x$)', {'fontsize': 16})
+ax.set_ylabel('Time (s)', {'fontsize': 16})
 ax.legend()
 ax.grid(True, linestyle='--')
 

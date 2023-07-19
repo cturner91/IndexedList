@@ -2,6 +2,12 @@
 
 A python class which maintains an index of values in the list, improving read/query performance.
 
+## Why?
+
+I have been reading [Designing Data-Intensive Applications](https://www.amazon.co.uk/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321) and I wanted to try putting some of the concepts to use and writing some high-performing code.
+
+## How?
+
 A complementary class BaseList has been created with similar methods: `add`, `delete`, and `query`. For the BaseList, `add` and `delete` are trivial list methods, while `query` makes use of list comprehensions to filter the results appropriately.
 
 The IndexedList class maintains an index for the list in its `.values` attribute. This index gets updated when the `add`/`delete` methods are called. This leads to slower write performance (`add` and `delete`) but much faster read (`query`) performance.
